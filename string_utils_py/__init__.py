@@ -1,5 +1,5 @@
-from typing import Any, Pattern, Optional
-from re import compile as re_compile, sub as re_sub, escape as re_escape
+from typing import Any, Pattern, Optional, AnyStr
+from re import compile as re_compile, sub as re_sub, escape as re_escape, Pattern as RePattern, DOTALL as RE_DOTALL
 
 _CAMEL_CASED_LETTER_PATTERN = re_compile(pattern=r'(?<=.)((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))')
 
@@ -104,12 +104,12 @@ def text_align_delimiter(text: str, delimiter: str = ': ', put_non_match_after_d
 
 
 def expand_var(
-        string: str,
-        expand_map: dict[str, Any],
-        var_char: str = '%',
-        end_var_char: Optional[str] = '',
-        case_sensitive: bool = True,
-        exception_on_unexpanded: bool = False
+    string: str,
+    expand_map: dict[str, Any],
+    var_char: str = '%',
+    end_var_char: Optional[str] = '',
+    case_sensitive: bool = True,
+    exception_on_unexpanded: bool = False
 ) -> str:
     """
     Expand variables in a string.
@@ -126,7 +126,7 @@ def expand_var(
         is immediately to the left of the variable name.
     :param end_var_char: A character that is immediately to the right of the variable name, unless set to `None`, in
         which case no character is used.
-    :param case_sensitive: Whether the variable names in the string are case sensitive. If not, they are lower-cased
+    :param case_sensitive: Whether the variable names in the string are case-sensitive. If not, they are lower-cased
         prior to the map lookup.
     :param exception_on_unexpanded: Raise an exception if a variable name in the string is not in the map.
     :return: The variable-expanded string.
@@ -161,3 +161,29 @@ def expand_var(
             search_start_offset: int = var_pos_end
 
     return string
+
+
+def extract_ngrams(text: AnyStr, ngram_len: int) -> tuple[AnyStr, ...]:
+    """
+    Extract n-grams from a text.
+
+    The n-grams are extracted using a regular expression pattern. Note that
+    the `DOTALL` flag is used, allowing newlines to be included in the n-grams;
+    this is especially expected when providing a byte-string text.
+
+    :param text: A text from which to extract n-grams.
+    :param ngram_len: The length of the n-grams to be extracted from the text.
+    :return: N-grams of the specified length extracted from the text.
+    """
+
+    pattern: AnyStr = ngram_len * '.'
+    if isinstance(text, bytes):
+        pattern = pattern.encode()
+
+    re_pattern: RePattern = re_compile(pattern=pattern, flags=RE_DOTALL)
+
+    return tuple(
+        re_match
+        for text_offset in range(ngram_len)
+        for re_match in re_pattern.findall(text[text_offset:])
+    )
