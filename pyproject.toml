@@ -1,0 +1,4 @@
+[project]
+name = "string_utils_py"
+version = "1.1"
+dependencies = []

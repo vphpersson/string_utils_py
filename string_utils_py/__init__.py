@@ -1,5 +1,5 @@
-from typing import Any, Pattern, Optional, AnyStr
-from re import compile as re_compile, sub as re_sub, escape as re_escape, Pattern as RePattern, DOTALL as RE_DOTALL
+from typing import Any, Pattern, AnyStr
+from re import compile as re_compile, sub as re_sub, escape as re_escape, DOTALL as RE_DOTALL, findall as re_findall
 
 _CAMEL_CASED_LETTER_PATTERN = re_compile(pattern=r'(?<=.)((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))')
 
@@ -107,7 +107,7 @@ def expand_var(
     string: str,
     expand_map: dict[str, Any],
     var_char: str = '%',
-    end_var_char: Optional[str] = '',
+    end_var_char: str | None = '',
     case_sensitive: bool = True,
     exception_on_unexpanded: bool = False
 ) -> str:
@@ -167,9 +167,8 @@ def extract_ngrams(text: AnyStr, ngram_len: int) -> tuple[AnyStr, ...]:
     """
     Extract n-grams from a text.
 
-    The n-grams are extracted using a regular expression pattern. Note that
-    the `DOTALL` flag is used, allowing newlines to be included in the n-grams;
-    this is especially expected when providing a byte-string text.
+    The n-grams are extracted using a regular expression pattern. Note that the `DOTALL` flag is used, allowing
+    newlines to be included in the n-grams; this is especially expected when providing a byte-string text.
 
     :param text: A text from which to extract n-grams.
     :param ngram_len: The length of the n-grams to be extracted from the text.
@@ -180,10 +179,8 @@ def extract_ngrams(text: AnyStr, ngram_len: int) -> tuple[AnyStr, ...]:
     if isinstance(text, bytes):
         pattern = pattern.encode()
 
-    re_pattern: RePattern = re_compile(pattern=pattern, flags=RE_DOTALL)
-
     return tuple(
         re_match
         for text_offset in range(ngram_len)
-        for re_match in re_pattern.findall(text[text_offset:])
+        for re_match in re_findall(pattern=pattern, string=text[text_offset:], flags=RE_DOTALL)
     )
